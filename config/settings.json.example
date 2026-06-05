@@ -1,0 +1,22 @@
+{
+  "subscription_id": "YOUR-AZURE-SUBSCRIPTION-ID",
+  "tenant_id": "YOUR-AZURE-TENANT-ID",
+  "subscription_name": "TGNA-PROD-C1",
+  "key_vault_name": "tgna-kv-king-ctrl",
+  "resource_group": "rg-king-production",
+  "app_service_name": "interactive-king5",
+  "certificate_hostname": "king5.com",
+  "sectigo_org_id": "YOUR-SECTIGO-ORG-ID",
+  "notification_email": "your-email@company.com",
+  "smtp_server": "smtp.company.com",
+  "smtp_port": 587,
+  "smtp_from": "cert-platform@company.com",
+  "smtp_tls": true,
+  "smtp_user": "",
+  "smtp_pass": "",
+  "openai_api_key": "",
+  "log_level": "INFO",
+  "report_output_dir": "reports",
+  "approval_required": true,
+  "dry_run_default": true
+}
