@@ -1,0 +1,216 @@
+# azure-pipelines-cert-renewal.yml
+# SSL Certificate Lifecycle Platform - Azure DevOps Pipeline
+# 5-Stage pipeline: Discovery -> Plan -> Approval Gate -> Import -> Validation
+
+trigger: none  # Certificate renewal is always triggered manually
+
+parameters:
+  - name: environment
+    displayName: 'Target Environment'
+    type: string
+    default: 'production'
+    values:
+      - production
+      - staging
+
+  - name: certificateName
+    displayName: 'Certificate Name (e.g., king-wildcard)'
+    type: string
+    default: ''
+
+  - name: keyVaultName
+    displayName: 'Key Vault Name (e.g., tgna-kv-king-ctrl)'
+    type: string
+    default: ''
+
+  - name: pfxPath
+    displayName: 'PFX File Path (on agent or artifact)'
+    type: string
+    default: ''
+
+  - name: runApply
+    displayName: 'Execute Import (false = preview only)'
+    type: boolean
+    default: false
+
+variables:
+  - group: 'cert-lifecycle-${{ parameters.environment }}-vars'
+  - name: pythonVersion
+    value: '3.11'
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+# =============================================================================
+# STAGE 1: Discovery and Pre-flight
+# =============================================================================
+stages:
+  - stage: Discovery
+    displayName: 'Stage 1: Discovery and Pre-flight'
+    jobs:
+      - job: CertDiscovery
+        displayName: 'Run Certificate Discovery'
+        steps:
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: '$(pythonVersion)'
+
+          - script: pip install -r requirements.txt
+            displayName: 'Install Python Dependencies'
+
+          - task: AzureCLI@2
+            displayName: 'Discover Certificates'
+            inputs:
+              azureSubscription: '$(azureServiceConnection)'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                python platform/main.py discover --subscription "$(subscriptionName)"
+
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish Inventory Reports'
+            inputs:
+              targetPath: 'reports/'
+              artifactName: 'certificate-inventory'
+
+# =============================================================================
+# STAGE 2: Preview Import Plan
+# =============================================================================
+  - stage: PreviewPlan
+    displayName: 'Stage 2: Preview Import Plan'
+    dependsOn: Discovery
+    condition: succeeded()
+    jobs:
+      - job: PreviewImport
+        displayName: 'Preview Certificate Import'
+        steps:
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: '$(pythonVersion)'
+
+          - script: pip install -r requirements.txt
+            displayName: 'Install Python Dependencies'
+
+          - task: AzureCLI@2
+            displayName: 'Preview Import (No Changes)'
+            inputs:
+              azureSubscription: '$(azureServiceConnection)'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                python platform/main.py import \
+                  --cert "${{ parameters.certificateName }}" \
+                  --vault "${{ parameters.keyVaultName }}" \
+                  --pfx "${{ parameters.pfxPath }}" \
+                  --preview
+
+# =============================================================================
+# STAGE 3: Approval Gate
+# =============================================================================
+  - stage: ApprovalGate
+    displayName: 'Stage 3: Approval Gate'
+    dependsOn: PreviewPlan
+    condition: and(succeeded(), eq('${{ parameters.runApply }}', 'true'))
+    jobs:
+      - job: WaitForApproval
+        displayName: 'Waiting for Import Approval'
+        pool: server
+        steps:
+          - task: ManualValidation@0
+            displayName: 'Manual Approval: Review and approve certificate import'
+            inputs:
+              notifyUsers: '$(approvalGroup)'
+              instructions: |
+                Review the certificate inventory from Stage 1.
+                Review the import preview from Stage 2.
+                
+                PROPOSED IMPORT:
+                  Certificate : ${{ parameters.certificateName }}
+                  Key Vault   : ${{ parameters.keyVaultName }}
+                  Environment : ${{ parameters.environment }}
+                
+                Approve to proceed with Key Vault import.
+                Reject to cancel.
+              onTimeout: 'reject'
+              timeout: '1440'  # 24 hours
+
+# =============================================================================
+# STAGE 4: Execute Import
+# =============================================================================
+  - stage: ExecuteImport
+    displayName: 'Stage 4: Execute Certificate Import'
+    dependsOn: ApprovalGate
+    condition: succeeded()
+    jobs:
+      - job: ImportCertificate
+        displayName: 'Import Certificate to Key Vault'
+        steps:
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: '$(pythonVersion)'
+
+          - script: pip install -r requirements.txt
+            displayName: 'Install Python Dependencies'
+
+          - task: AzurePowerShell@5
+            displayName: 'Import Certificate (PowerShell)'
+            inputs:
+              azureSubscription: '$(azureServiceConnection)'
+              ScriptType: FilePath
+              ScriptPath: 'scripts/keyvault/Import-CertificateToKeyVault.ps1'
+              ScriptArguments: >
+                -VaultName '${{ parameters.keyVaultName }}'
+                -CertName '${{ parameters.certificateName }}'
+                -PfxPath '${{ parameters.pfxPath }}'
+                -Execute
+              azurePowerShellVersion: 'LatestVersion'
+
+# =============================================================================
+# STAGE 5: Post-Import Validation
+# =============================================================================
+  - stage: Validation
+    displayName: 'Stage 5: Post-Import Validation'
+    dependsOn: ExecuteImport
+    condition: succeeded()
+    jobs:
+      - job: ValidateCertificate
+        displayName: 'Run Post-Import Validation'
+        steps:
+          - task: AzurePowerShell@5
+            displayName: 'Post-Import Validation (7-point check)'
+            inputs:
+              azureSubscription: '$(azureServiceConnection)'
+              ScriptType: FilePath
+              ScriptPath: 'scripts/validation/Invoke-PostImportValidation.ps1'
+              ScriptArguments: >
+                -VaultName '${{ parameters.keyVaultName }}'
+                -CertName '${{ parameters.certificateName }}'
+                -AppServiceName '$(appServiceName)'
+                -Hostname '$(certificateHostname)'
+                -ResourceGroupName '$(resourceGroupName)'
+              azurePowerShellVersion: 'LatestVersion'
+
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish Validation Report'
+            condition: always()
+            inputs:
+              targetPath: 'reports/ValidationReport.md'
+              artifactName: 'validation-report'
+
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: '$(pythonVersion)'
+
+          - script: pip install -r requirements.txt
+            displayName: 'Install Python Dependencies'
+
+          - task: AzureCLI@2
+            displayName: 'Generate Jira Update'
+            inputs:
+              azureSubscription: '$(azureServiceConnection)'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                python platform/main.py jira-update \
+                  --cert "${{ parameters.certificateName }}" \
+                  --stage validation-complete
