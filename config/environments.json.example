@@ -1,0 +1,23 @@
+{
+  "environments": [
+    {
+      "name": "production",
+      "subscription": "TGNA-PROD-C1",
+      "subscription_id": "YOUR-SUBSCRIPTION-ID",
+      "resource_group": "rg-king-production",
+      "key_vault": "tgna-kv-king-ctrl",
+      "app_services": ["interactive-king5"],
+      "certificates": [
+        {
+          "name": "king-wildcard",
+          "secret_name": "king-wildcard",
+          "domain": "*.king5.com",
+          "app_service": "interactive-king5",
+          "expiration": "2026-06-09",
+          "auto_renew": true,
+          "renewal_threshold_days": 90
+        }
+      ]
+    }
+  ]
+}
