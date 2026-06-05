@@ -1,0 +1,70 @@
+# .gitignore
+
+# Configuration files with secrets (NEVER commit these)
+config/settings.json
+config/certificate-inventory.json
+config/environments.json
+
+# Generated reports (auto-generated on each run)
+reports/
+!reports/.gitkeep
+
+# Certificate artifacts (NEVER commit private keys or PFX files)
+*.pfx
+*.p12
+*.key
+*.pem
+*.cer
+*.crt
+*.p7b
+*.p7c
+*.csr
+
+# Logs
+logs/
+!logs/.gitkeep
+
+# Backups
+backups/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Test output
+.pytest_cache/
+htmlcov/
+.coverage
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
