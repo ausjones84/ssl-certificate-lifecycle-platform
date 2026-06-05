@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SSL Certificate Lifecycle Dashboard</title>
+  <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+
+<header>
+  <div class="header-content">
+    <h1>SSL Certificate Lifecycle Dashboard</h1>
+    <div class="header-meta">
+      <span id="last-updated">Loading...</span>
+      <button onclick="loadInventory()" class="btn-refresh">Refresh</button>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- Summary Cards -->
+  <section class="cards">
+    <div class="card card-critical" id="card-expired">
+      <div class="card-number" id="count-expired">0</div>
+      <div class="card-label">Expired</div>
+    </div>
+    <div class="card card-high" id="card-30">
+      <div class="card-number" id="count-30">0</div>
+      <div class="card-label">Expiring &lt; 30 Days</div>
+    </div>
+    <div class="card card-medium" id="card-60">
+      <div class="card-number" id="count-60">0</div>
+      <div class="card-label">Expiring &lt; 60 Days</div>
+    </div>
+    <div class="card card-low" id="card-90">
+      <div class="card-number" id="count-90">0</div>
+      <div class="card-label">Expiring &lt; 90 Days</div>
+    </div>
+    <div class="card card-ok" id="card-ok">
+      <div class="card-number" id="count-ok">0</div>
+      <div class="card-label">Healthy (&gt; 90 Days)</div>
+    </div>
+    <div class="card card-total" id="card-total">
+      <div class="card-number" id="count-total">0</div>
+      <div class="card-label">Total Certificates</div>
+    </div>
+  </section>
+
+  <!-- Action Required -->
+  <section class="table-section" id="section-action">
+    <h2>Action Required</h2>
+    <div id="action-empty" class="empty-state">No certificates require immediate action.</div>
+    <table id="table-action" style="display:none">
+      <thead>
+        <tr>
+          <th>Domain</th>
+          <th>Certificate</th>
+          <th>Key Vault</th>
+          <th>App Service</th>
+          <th>Expires</th>
+          <th>Days Left</th>
+          <th>Risk</th>
+        </tr>
+      </thead>
+      <tbody id="body-action"></tbody>
+    </table>
+  </section>
+
+  <!-- Full Inventory -->
+  <section class="table-section">
+    <h2>Full Certificate Inventory</h2>
+    <div class="table-controls">
+      <input type="text" id="search-input" placeholder="Search certificates..." oninput="filterTable()">
+      <select id="risk-filter" onchange="filterTable()">
+        <option value="">All Risk Levels</option>
+        <option value="EXPIRED">Expired</option>
+        <option value="CRITICAL">Critical</option>
+        <option value="HIGH">High</option>
+        <option value="MEDIUM">Medium</option>
+        <option value="LOW">Low</option>
+        <option value="OK">OK</option>
+      </select>
+    </div>
+    <div id="inventory-empty" class="empty-state">
+      No inventory data found. Run: python platform/main.py discover
+      <br><br>
+      Then reload this page (the dashboard reads from reports/CertificateInventory.json).
+    </div>
+    <table id="table-inventory" style="display:none">
+      <thead>
+        <tr>
+          <th>Domain</th>
+          <th>Certificate</th>
+          <th>Key Vault</th>
+          <th>App Service</th>
+          <th>Expires</th>
+          <th>Days Left</th>
+          <th>Risk</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="body-inventory"></tbody>
+    </table>
+  </section>
+
+</main>
+
+<footer>
+  <p>SSL Certificate Lifecycle Platform v1.0.0 | 
+     <a href="../QUICKSTART.md">Quick Start</a> | 
+     <a href="../USER_GUIDE.md">User Guide</a> | 
+     <a href="../TROUBLESHOOTING.md">Troubleshooting</a>
+  </p>
+</footer>
+
+<script src="dashboard.js"></script>
+</body>
+</html>
