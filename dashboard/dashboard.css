@@ -1,0 +1,66 @@
+/* SSL Certificate Lifecycle Dashboard */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Calibri, Arial, sans-serif; color: #333; background: #f5f7fa; }
+
+header {
+  background: #1F4E79;
+  color: white;
+  padding: 16px 24px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+.header-content { display: flex; justify-content: space-between; align-items: center; max-width: 1400px; margin: auto; }
+h1 { font-size: 20px; font-weight: 600; }
+.header-meta { font-size: 13px; color: #aad4f5; display: flex; gap: 16px; align-items: center; }
+.btn-refresh { background: #2E75B6; color: white; border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+.btn-refresh:hover { background: #3A8FD6; }
+
+main { max-width: 1400px; margin: 24px auto; padding: 0 24px; }
+
+/* Cards */
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; margin-bottom: 32px; }
+.card { background: white; border-radius: 8px; padding: 20px 16px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-left: 4px solid #ccc; }
+.card-number { font-size: 36px; font-weight: 700; line-height: 1; }
+.card-label { font-size: 12px; color: #666; margin-top: 6px; }
+.card-critical { border-color: #C00000; }
+.card-critical .card-number { color: #C00000; }
+.card-high { border-color: #ED7D31; }
+.card-high .card-number { color: #ED7D31; }
+.card-medium { border-color: #FFC000; }
+.card-medium .card-number { color: #B8860B; }
+.card-low { border-color: #70AD47; }
+.card-low .card-number { color: #375623; }
+.card-ok { border-color: #00B050; }
+.card-ok .card-number { color: #00B050; }
+.card-total { border-color: #1F4E79; }
+.card-total .card-number { color: #1F4E79; }
+
+/* Tables */
+.table-section { background: white; border-radius: 8px; padding: 20px 24px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.table-section h2 { font-size: 16px; color: #1F4E79; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid #E2EFDA; }
+.table-controls { display: flex; gap: 12px; margin-bottom: 12px; }
+.table-controls input, .table-controls select { padding: 6px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; }
+.table-controls input { flex: 1; }
+
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { background: #1F4E79; color: white; padding: 10px 12px; text-align: left; font-weight: 600; }
+td { padding: 8px 12px; border-bottom: 1px solid #eee; }
+tr:hover td { background: #f0f7ff; }
+
+.badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+.badge-EXPIRED { background: #FFC7CE; color: #9C0006; }
+.badge-CRITICAL { background: #FFC7CE; color: #9C0006; }
+.badge-HIGH { background: #FFEB9C; color: #9C6500; }
+.badge-MEDIUM { background: #FFFACD; color: #7D6608; }
+.badge-LOW { background: #C6EFCE; color: #276221; }
+.badge-OK { background: #C6EFCE; color: #276221; }
+.badge-UNKNOWN { background: #F0F0F0; color: #666; }
+
+.days-critical { color: #C00000; font-weight: 700; }
+.days-high { color: #ED7D31; font-weight: 700; }
+.days-medium { color: #B8860B; }
+.days-ok { color: #276221; }
+
+.empty-state { color: #999; font-style: italic; padding: 20px 0; text-align: center; }
+
+footer { text-align: center; padding: 24px; color: #999; font-size: 12px; }
+footer a { color: #2E75B6; }
