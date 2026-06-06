@@ -1,0 +1,88 @@
+# cert-lifecycle-scan.yml
+# GitHub Actions workflow for scheduled certificate discovery and risk alerting
+
+name: Certificate Lifecycle Scan
+
+on:
+  schedule:
+    # Run every Monday at 08:00 UTC
+    - cron: '0 8 * * 1'
+  workflow_dispatch:
+    inputs:
+      subscription:
+        description: 'Azure Subscription Name'
+        required: false
+        default: ''
+      days_threshold:
+        description: 'Days threshold for risk alerts'
+        required: false
+        default: '90'
+
+jobs:
+  cert-discovery:
+    name: Certificate Discovery and Risk Analysis
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Run Certificate Discovery
+        run: |
+          python platform/main.py discover \
+            --subscription "${{ github.event.inputs.subscription || vars.AZURE_SUBSCRIPTION }}"
+
+      - name: Run AI Risk Analysis
+        run: |
+          python platform/main.py ai-report \
+            --days ${{ github.event.inputs.days_threshold || '90' }}
+
+      - name: Upload Inventory Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: certificate-inventory-${{ github.run_id }}
+          path: reports/
+          retention-days: 30
+
+      - name: Upload Risk Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: risk-report-${{ github.run_id }}
+          path: reports/RiskReport.md
+          retention-days: 30
+
+  # Optional: Post summary to GitHub Job Summary
+  post-summary:
+    name: Post Summary
+    needs: cert-discovery
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Download inventory
+        uses: actions/download-artifact@v4
+        with:
+          name: certificate-inventory-${{ github.run_id }}
+          path: reports/
+
+      - name: Post to Job Summary
+        run: |
+          echo "## Certificate Inventory Summary" >> $GITHUB_STEP_SUMMARY
+          if [ -f reports/CertificateInventory.md ]; then
+            cat reports/CertificateInventory.md >> $GITHUB_STEP_SUMMARY
+          else
+            echo "No inventory file found." >> $GITHUB_STEP_SUMMARY
+          fi
