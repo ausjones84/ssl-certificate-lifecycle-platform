@@ -1,0 +1,4 @@
+# logs directory
+# Log files are auto-generated here during platform operations
+# Log files are gitignored and not committed to the repository
+# Format: CERT_LIFECYCLE_YYYYMMDD_HHMMSS.log
