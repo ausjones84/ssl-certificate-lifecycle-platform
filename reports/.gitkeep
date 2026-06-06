@@ -1,0 +1,4 @@
+# reports directory
+# Reports are auto-generated here during platform operations.
+# All reports are gitignored and not committed.
+# Run: python platform/main.py report to generate reports.
