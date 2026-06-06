@@ -1,0 +1,25 @@
+{
+  "generated": "2026-06-05",
+  "description": "Seed certificate inventory. Run python platform/main.py discover to update automatically.",
+  "certificates": [
+    {
+      "cert_name": "king-wildcard",
+      "domain": "*.king5.com",
+      "key_vault": "tgna-kv-king-ctrl",
+      "secret_name": "king-wildcard",
+      "resource_group": "rg-king-production",
+      "subscription": "TGNA-PROD-C1",
+      "app_service": "interactive-king5",
+      "expiration": "2026-06-09",
+      "days_until_expiry": 4,
+      "risk_level": "CRITICAL",
+      "thumbprint": "",
+      "issuer": "Sectigo",
+      "version": "",
+      "enabled": true,
+      "binding_status": "BOUND",
+      "last_checked": "2026-06-05 00:00:00",
+      "notes": "Seed data - run discover to get real values"
+    }
+  ]
+}
